@@ -20,7 +20,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         </Head>
         <main>
           <SiteHeader />
-          <Component {...pageProps} />
+          <div className="page">
+            <Component {...pageProps} />
+          </div>
         </main>
       </div>
     </SSRProvider>
