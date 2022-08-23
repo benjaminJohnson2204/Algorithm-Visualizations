@@ -4,7 +4,7 @@ import Head from "next/head";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import { SSRProvider } from "react-bootstrap";
-import SiteHeader from "../components/SiteHeader";
+import SiteHeader from "@/components/SiteHeader";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
