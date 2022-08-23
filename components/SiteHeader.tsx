@@ -1,14 +1,5 @@
-import {
-  Container,
-  Dropdown,
-  Nav,
-  Navbar,
-  NavDropdown,
-  NavItem,
-  SSRProvider,
-} from "react-bootstrap";
+import { Container, Dropdown, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import Link from "next/link";
-import { DropdownSubmenu, NavDropdownMenu } from "react-bootstrap-submenu";
 
 const problems = [
   {
@@ -36,7 +27,7 @@ const problems = [
 
 const SiteHeader = () => {
   return (
-    <Navbar collapseOnSelect bg="success" variant="dark" expand="lg">
+    <Navbar collapseOnSelect bg="info" variant="light" expand="lg">
       <Container fluid>
         <Link href="/" passHref>
           <Navbar.Brand>Home</Navbar.Brand>
@@ -45,45 +36,29 @@ const SiteHeader = () => {
         <Navbar.Collapse id="navbar">
           <Nav className="me-auto">
             {problems.map((topic, topicIndex) => (
-              <NavDropdownMenu
+              <NavDropdown
                 key={topicIndex}
-                title={topic.longName}
                 id={topic.shortName}
+                title={topic.longName}
               >
                 {topic.children.map((subTopic, subTopicIndex) => (
-                  <Dropdown.Item key={subTopicIndex}>
-                    <Dropdown drop="end" autoClose="outside">
-                      <Dropdown.Toggle>{subTopic.longName}</Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        {subTopic.children.map((problem, problemIndex) => (
-                          <Link
-                            key={problemIndex}
-                            href={`${topic.shortName}/${subTopic.shortName}/${problem.shortName}`}
-                            passHref
-                          >
-                            <Dropdown.Item>{problem.longName}</Dropdown.Item>
-                          </Link>
-                        ))}
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </Dropdown.Item>
-                  //   <DropdownSubmenu
-                  //     className="dropend"
-                  //     key={subTopicIndex}
-                  //     title={subTopic.longName}
-                  //   >
-                  //     {subTopic.children.map((problem, problemIndex) => (
-                  //       <Link
-                  //         key={problemIndex}
-                  //         href={`${topic.shortName}/${subTopic.shortName}/${problem.shortName}`}
-                  //         passHref
-                  //       >
-                  //         <Dropdown.Item>{problem.longName}</Dropdown.Item>
-                  //       </Link>
-                  //     ))}
-                  //   </DropdownSubmenu>
+                  <NavDropdown
+                    drop="end"
+                    key={subTopicIndex}
+                    title={subTopic.longName}
+                  >
+                    {subTopic.children.map((problem, problemIndex) => (
+                      <Link
+                        key={problemIndex}
+                        href={`${topic.shortName}/${subTopic.shortName}/${problem.shortName}`}
+                        passHref
+                      >
+                        <Dropdown.Item>{problem.longName}</Dropdown.Item>
+                      </Link>
+                    ))}
+                  </NavDropdown>
                 ))}
-              </NavDropdownMenu>
+              </NavDropdown>
             ))}
           </Nav>
         </Navbar.Collapse>
