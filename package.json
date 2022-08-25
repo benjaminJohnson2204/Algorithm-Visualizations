@@ -11,15 +11,15 @@
   "dependencies": {
     "bootstrap": "^5.2.0",
     "canvas": "^2.9.3",
-    "konva": "^8.3.11",
+    "d3": "^7.6.1",
     "next": "12.2.5",
     "react": "18.2.0",
     "react-bootstrap": "^2.5.0",
     "react-bootstrap-submenu": "^2.0.0",
-    "react-dom": "18.2.0",
-    "react-konva": "^18.2.1"
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.0",
     "@types/node": "18.7.11",
     "@types/react": "^18.0.17",
     "@types/react-dom": "18.0.6",
