@@ -10,11 +10,18 @@ interface ArrayElement {
   value: number;
 }
 
+interface Auxilary {
+  startIndex: number;
+  elements: ArrayElement[];
+}
+
 // State of array at a given step
 interface State {
   nums: ArrayElement[];
   pivot?: number;
   cur?: number;
+  aside?: number;
+  auxilary?: Auxilary;
 }
 
 const minArrayLength = 2,
@@ -28,6 +35,8 @@ const Sort: NextPage = () => {
 
   const [windowWidth, setWindowWidth] = useState<number>();
   const [windowHeight, setWindowHeight] = useState<number>();
+
+  const [transitionDuration, setTransitionDuration] = useState(500);
 
   const [array, setArray] = useState(() => {
     const initialArray: ArrayElement[] = [];
@@ -47,9 +56,9 @@ const Sort: NextPage = () => {
   });
 
   useEffect(() => {
-    const height = 500;
-    const width = 500;
-    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    const height = window.innerHeight;
+    const width = window.innerWidth;
+    const margin = { top: 20, right: 100, bottom: 30, left: 100 };
 
     const xScale = d3
       .scaleBand()
@@ -59,8 +68,8 @@ const Sort: NextPage = () => {
 
     const yScale = d3
       .scaleLinear()
-      .domain([0, maxNumVal])
-      .range([height - margin.bottom, margin.top]);
+      .domain([0, d3.max(array, (d) => d.value)!])
+      .range([height / 2 - margin.bottom, margin.top]);
 
     d3.select(".bars")
       .attr("fill", "blue")
@@ -75,43 +84,83 @@ const Sort: NextPage = () => {
       .attr("height", (d: ArrayElement) => yScale(0) - yScale(d.value));
 
     if (sorting) {
+      let states: State[];
+      switch (sortingType) {
+        case "merge":
+          states = mergeSort();
+          break;
+        case "quick":
+          states = quickSort();
+          break;
+        case "bubble":
+          states = bubbleSort();
+          break;
+        case "insertion":
+          states = insertionSort();
+          break;
+        case "selection":
+          states = selectionSort();
+          break;
+        default:
+          states = [];
+          break;
+      }
+
       (async () => {
-        switch (sortingType) {
-          // case "merge":
-          //   mergeSort(svg, svg.transition().duration(500).ease(d3.easeLinear));
-          //   break;
-          case "quick":
-            for (const state of quickSort()) {
-              console.log(state);
-              const newTransition = d3
-                .transition()
-                .duration(1000)
-                .ease(d3.easeLinear);
-              d3.select("g")
-                .selectAll("rect")
-                .transition(newTransition)
-                .attr("x", (d: any, index: number) => {
-                  for (
-                    let newIndex = 0;
-                    newIndex < state.nums.length;
-                    newIndex++
-                  ) {
-                    if (state.nums[newIndex].key === index) {
-                      return xScale(newIndex.toString())!;
-                    }
+        for (const state of states) {
+          console.log(state);
+          const newTransition = d3
+            .transition()
+            .duration(transitionDuration)
+            .ease(d3.easeLinear);
+          d3.select("g")
+            .selectAll("rect")
+            .transition(newTransition)
+            .attr("x", (d: any, index: number) => {
+              if (state.auxilary) {
+                for (
+                  let newIndex = 0;
+                  newIndex < state.auxilary.elements.length;
+                  newIndex++
+                ) {
+                  if (state.auxilary.elements[newIndex].key === index) {
+                    return xScale(
+                      (newIndex + state.auxilary.startIndex).toString()
+                    )!;
                   }
-                  return xScale("0")!;
-                })
-                .style("fill", (d: any, index: number) =>
-                  state.pivot === index
-                    ? "red"
-                    : state.cur === index
-                    ? "green"
-                    : "blue"
-                );
-              await newTransition.end();
-            }
-            break;
+                }
+              }
+
+              for (let newIndex = 0; newIndex < state.nums.length; newIndex++) {
+                if (state.nums[newIndex].key === index) {
+                  return xScale(newIndex.toString())!;
+                }
+              }
+
+              return xScale("0")!;
+            })
+            .attr("y", (d: any, index: number) => {
+              if (state.auxilary) {
+                for (
+                  let newIndex = 0;
+                  newIndex < state.auxilary.elements.length;
+                  newIndex++
+                ) {
+                  if (state.auxilary.elements[newIndex].key === index) {
+                    return yScale(0) + 25;
+                  }
+                }
+              }
+              return state.aside === index ? yScale(0) + 25 : yScale(d.value);
+            })
+            .style("fill", (d: any, index: number) =>
+              state.pivot === index
+                ? "red"
+                : state.cur === index
+                ? "green"
+                : "blue"
+            );
+          await newTransition.end();
         }
       })();
     }
@@ -124,11 +173,45 @@ const Sort: NextPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const mergeSort = () => {};
+  const mergeSort = (
+    start = 0,
+    end = array.length,
+    newArray = [...array]
+  ): State[] => {
+    if (start >= end - 1) return [];
+    const mid = Math.floor((start + end) / 2);
+    const sortedLeft = mergeSort(start, mid, newArray);
+    const sortedRight = mergeSort(mid, end, newArray);
+    const states: State[] = sortedLeft.concat(sortedRight);
+    const auxilaryElements: ArrayElement[] = [];
+    let leftPointer = start,
+      rightPointer = mid;
+    while (leftPointer < mid || rightPointer < end) {
+      if (
+        rightPointer >= end ||
+        (leftPointer < mid &&
+          newArray[leftPointer].value <= newArray[rightPointer].value)
+      ) {
+        auxilaryElements.push(newArray[leftPointer]);
+        leftPointer++;
+      } else {
+        auxilaryElements.push(newArray[rightPointer]);
+        rightPointer++;
+      }
+      states.push({
+        nums: [...newArray],
+        auxilary: { startIndex: start, elements: [...auxilaryElements] },
+      });
+    }
+    for (let i = start; i < end; i++) {
+      newArray[i] = auxilaryElements[i - start];
+    }
+    states.push({
+      nums: [...newArray],
+    });
+    return states;
+  };
 
-  /*
-   * Quick sort the array and return a list of its states after each swap
-   */
   const quickSort = (
     start = 0,
     end = array.length,
@@ -166,6 +249,62 @@ const Sort: NextPage = () => {
       .concat(quickSort(i + 2, end, newArray));
   };
 
+  const bubbleSort = () => {
+    const newArray = [...array];
+    const states: State[] = [];
+
+    for (let i = 0; i < newArray.length; i++) {
+      let swapped = false;
+      states.push({ nums: [...newArray] });
+      for (let j = 0; j < newArray.length - i - 1; j++) {
+        if (newArray[j].value > newArray[j + 1].value) {
+          swap(newArray, j, j + 1);
+          states.push({ nums: [...newArray] });
+          swapped = true;
+        }
+      }
+      if (!swapped) break;
+    }
+    return states;
+  };
+
+  const insertionSort = () => {
+    const newArray = [...array];
+    const states: State[] = [];
+    for (let i = 1; i < newArray.length; i++) {
+      states.push({ nums: [...newArray], aside: newArray[i].key });
+      let j = i - 1;
+      for (; j >= 0 && newArray[j].value > newArray[j + 1].value; j--) {
+        swap(newArray, j, j + 1);
+        states.push({ nums: [...newArray], aside: newArray[j].key });
+      }
+      states.push({ nums: [...newArray] });
+    }
+    return states;
+  };
+
+  const selectionSort = () => {
+    const newArray = [...array];
+    const states: State[] = [];
+    for (let i = 0; i < newArray.length; i++) {
+      let smallestIndex = i;
+      for (let j = i; j < newArray.length; j++) {
+        if (newArray[j].value < newArray[smallestIndex].value) {
+          smallestIndex = j;
+        }
+      }
+      swap(newArray, i, smallestIndex);
+      states.push({ nums: [...newArray] });
+    }
+    return states;
+  };
+
+  const swap = (arr: ArrayElement[], i: number, j: number) => {
+    const temp = arr[j];
+    arr[j] = arr[i];
+    arr[i] = temp;
+  };
+
   return (
     <div className="page">
       <h1>Array Sorting</h1>
@@ -194,7 +333,7 @@ const Sort: NextPage = () => {
       </Form>
       <svg
         style={{
-          height: 500,
+          height: windowHeight,
           width: "100%",
           marginRight: "0px",
           marginLeft: "0px",
