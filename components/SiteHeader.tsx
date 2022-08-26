@@ -81,8 +81,11 @@ const SiteHeader = () => {
               <NavDropdown
                 key={topicIndex}
                 id={topic.shortName}
-                title={topic.longName}
-                onClick={() => router.push(`/${topic.shortName}`)}
+                title={
+                  <text onClick={() => router.push(`/${topic.shortName}`)}>
+                    {topic.longName}
+                  </text>
+                }
                 onMouseOver={() => setShowTopic(topicIndex, true)}
                 onMouseLeave={() => setShowTopic(topicIndex, false)}
                 show={showMenus[topicIndex].show}
@@ -91,9 +94,16 @@ const SiteHeader = () => {
                   <NavDropdown
                     drop="end"
                     key={subTopicIndex}
-                    title={subTopic.longName}
-                    onClick={() =>
-                      router.push(`/${topic.shortName}/${subTopic.shortName}`)
+                    title={
+                      <text
+                        onClick={() =>
+                          router.push(
+                            `/${topic.shortName}/${subTopic.shortName}`
+                          )
+                        }
+                      >
+                        {subTopic.longName}
+                      </text>
                     }
                     onMouseOver={() =>
                       setShowSubTopic(topicIndex, subTopicIndex, true)
