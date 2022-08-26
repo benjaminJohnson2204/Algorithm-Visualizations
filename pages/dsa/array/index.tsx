@@ -3,7 +3,7 @@ import type { NextPage } from "next";
 const Arrays: NextPage = () => {
   return (
     <div>
-      <h1>Arrays</h1>
+      <h1 className="m-5">Arrays</h1>
     </div>
   );
 };
