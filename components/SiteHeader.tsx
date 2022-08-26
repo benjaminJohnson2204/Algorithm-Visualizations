@@ -1,6 +1,7 @@
 import { Container, Dropdown, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 const problems = [
   {
@@ -33,6 +34,8 @@ const SiteHeader = () => {
       showChildren: topic.children.map((child) => false),
     }))
   );
+
+  const router = useRouter();
 
   const setShowTopic = (topicIndex: number, show: boolean) =>
     setShowMenus((prevShowMenus) =>
@@ -78,11 +81,8 @@ const SiteHeader = () => {
               <NavDropdown
                 key={topicIndex}
                 id={topic.shortName}
-                title={
-                  <Link href={`/${topic.shortName}`} passHref>
-                    {topic.longName}
-                  </Link>
-                }
+                title={topic.longName}
+                onClick={() => router.push(`/${topic.shortName}`)}
                 onMouseOver={() => setShowTopic(topicIndex, true)}
                 onMouseLeave={() => setShowTopic(topicIndex, false)}
                 show={showMenus[topicIndex].show}
@@ -91,13 +91,9 @@ const SiteHeader = () => {
                   <NavDropdown
                     drop="end"
                     key={subTopicIndex}
-                    title={
-                      <Link
-                        href={`/${topic.shortName}/${subTopic.shortName}`}
-                        passHref
-                      >
-                        {subTopic.longName}
-                      </Link>
+                    title={subTopic.longName}
+                    onClick={() =>
+                      router.push(`/${topic.shortName}/${subTopic.shortName}`)
                     }
                     onMouseOver={() =>
                       setShowSubTopic(topicIndex, subTopicIndex, true)
@@ -108,13 +104,16 @@ const SiteHeader = () => {
                     show={showMenus[topicIndex].showChildren[subTopicIndex]}
                   >
                     {subTopic.children.map((problem, problemIndex) => (
-                      <Link
+                      <Dropdown.Item
                         key={problemIndex}
-                        href={`/${topic.shortName}/${subTopic.shortName}/${problem.shortName}`}
-                        passHref
+                        onClick={() =>
+                          router.push(
+                            `/${topic.shortName}/${subTopic.shortName}/${problem.shortName}`
+                          )
+                        }
                       >
-                        <Dropdown.Item>{problem.longName}</Dropdown.Item>
-                      </Link>
+                        {problem.longName}
+                      </Dropdown.Item>
                     ))}
                   </NavDropdown>
                 ))}
