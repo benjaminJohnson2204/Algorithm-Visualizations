@@ -5,6 +5,15 @@ import { Button, Form } from "react-bootstrap";
 
 import * as d3 from "d3";
 
+class ElementColors {
+  static UNSORTED = "cyan";
+  static SORTED = "blue";
+  static ACTIVE_1 = "red";
+  static ACTIVE_2 = "green";
+  static ACTIVE_3 = "orange";
+  static ACTIVE_SECTION = "purple";
+}
+
 interface ArrayElement {
   key: number;
   value: number;
@@ -18,8 +27,7 @@ interface Auxilary {
 // State of array at a given step
 interface State {
   nums: ArrayElement[];
-  pivot?: number;
-  cur?: number;
+  colors?: string[];
   aside?: number;
   auxilary?: Auxilary;
 }
@@ -30,17 +38,11 @@ const minArrayLength = 2,
   maxNumVal = 10;
 
 const Sort: NextPage = () => {
-  const width = 800;
-  const height = 600;
   const margin = { top: 20, right: 100, bottom: 30, left: 100 };
   const [sortingType, setSortingType] = useState("merge");
   const [sorting, setSorting] = useState(false);
 
-  const [windowWidth, setWindowWidth] = useState<number>();
-  const [windowHeight, setWindowHeight] = useState<number>();
-
-  const [transitionDuration, setTransitionDuration] = useState(300);
-  const [delayBetweenSteps, setDelayBetweenSteps] = useState(50);
+  const [transitionDuration, setTransitionDuration] = useState(0);
 
   const [steps, setSteps] = useState<State[]>([]);
   const [curStep, setCurStep] = useState(0);
@@ -62,32 +64,42 @@ const Sort: NextPage = () => {
     return initialArray;
   });
 
-  const xScale = d3
-    .scaleBand()
-    .domain(array.map((num, index) => index.toString()))
-    .rangeRound([margin.left, width - margin.left])
-    .padding(0.1);
+  const getXScale = (width: number) =>
+    d3
+      .scaleBand()
+      .domain(array.map((num, index) => index.toString()))
+      .rangeRound([margin.left, width - margin.left])
+      .padding(0.1);
 
-  const yScale = d3
-    .scaleLinear()
-    .domain([0, d3.max(array, (d) => d.value)!])
-    .range([height / 2 - margin.bottom, margin.top]);
+  const getYScale = (height: number) =>
+    d3
+      .scaleLinear()
+      .domain([0, d3.max(array, (d) => d.value)!])
+      .range([height / 2 - margin.bottom, margin.top]);
 
   useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    setWindowHeight(window.innerHeight);
-
     d3.select(".bars")
-      .attr("fill", "blue")
+      .attr("fill", ElementColors.UNSORTED)
       .selectAll(".bar")
       .data(array)
       .enter()
       .append("rect")
       .attr("class", "bar")
-      .attr("x", (d: ArrayElement, i: number) => xScale(i.toString())!)
-      .attr("width", (d: ArrayElement, i: number) => xScale.bandwidth())
-      .attr("y", (d: ArrayElement) => yScale(d.value))
-      .attr("height", (d: ArrayElement) => yScale(0) - yScale(d.value));
+      .attr(
+        "x",
+        (d: ArrayElement, i: number) =>
+          getXScale(window.innerWidth)(i.toString())!
+      )
+      .attr("width", (d: ArrayElement, i: number) =>
+        getXScale(window.innerWidth).bandwidth()
+      )
+      .attr("y", (d: ArrayElement) => getYScale(window.innerHeight)(d.value))
+      .attr(
+        "height",
+        (d: ArrayElement) =>
+          getYScale(window.innerHeight)(0) -
+          getYScale(window.innerHeight)(d.value)
+      );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -116,6 +128,9 @@ const Sort: NextPage = () => {
         runSortingStep().then(() =>
           setCurStep((prevCurStep) => prevCurStep + 1)
         );
+      } else {
+        // setSorting(false);
+        // setSteps([]);
       }
     }
 
@@ -124,6 +139,7 @@ const Sort: NextPage = () => {
 
   const runSortingStep = async () => {
     const state = steps[curStep];
+    console.log(state);
     const newTransition = d3
       .transition()
       .duration(transitionDuration)
@@ -139,8 +155,8 @@ const Sort: NextPage = () => {
             newIndex++
           ) {
             if (state.auxilary.elements[newIndex].key === index) {
-              return xScale!(
-                (newIndex + state.auxilary.startIndex).toString()
+              return getXScale(window.innerWidth)(
+                (newIndex + state.auxilary.startIndex).toString()!
               )!;
             }
           }
@@ -148,11 +164,11 @@ const Sort: NextPage = () => {
 
         for (let newIndex = 0; newIndex < state.nums.length; newIndex++) {
           if (state.nums[newIndex].key === index) {
-            return xScale!(newIndex.toString())!;
+            return getXScale(window.innerWidth)(newIndex.toString())!;
           }
         }
 
-        return xScale!("0")!;
+        return getXScale(window.innerWidth)("0")!;
       })
       .attr("y", (d: any, index: number) => {
         if (state.auxilary) {
@@ -162,15 +178,24 @@ const Sort: NextPage = () => {
             newIndex++
           ) {
             if (state.auxilary.elements[newIndex].key === index) {
-              return yScale(0) + 25;
+              return getYScale(window.innerHeight)(0) + 25;
             }
           }
         }
-        return state.aside === index ? yScale(0) + 25 : yScale(d.value);
+        return state.aside === index
+          ? getYScale(window.innerHeight)(0) + 25
+          : getYScale(window.innerHeight)(d.value);
       })
-      .style("fill", (d: any, index: number) =>
-        state.pivot === index ? "red" : state.cur === index ? "green" : "blue"
-      );
+      .style("fill", (d: any, index: number) => {
+        for (let newIndex = 0; newIndex < state.nums.length; newIndex++) {
+          if (state.nums[newIndex].key === index) {
+            return state.colors
+              ? state.colors[newIndex]
+              : ElementColors.UNSORTED;
+          }
+        }
+        return ElementColors.UNSORTED;
+      });
     await newTransition.end();
   };
 
@@ -187,6 +212,18 @@ const Sort: NextPage = () => {
     const auxilaryElements: ArrayElement[] = [];
     let leftPointer = start,
       rightPointer = mid;
+    states.push({
+      nums: [...newArray],
+      colors: newArray.map((element, index) =>
+        start <= index && index < end
+          ? index === leftPointer
+            ? ElementColors.ACTIVE_1
+            : index === rightPointer
+            ? ElementColors.ACTIVE_2
+            : ElementColors.ACTIVE_SECTION
+          : ElementColors.UNSORTED
+      ),
+    });
     while (leftPointer < mid || rightPointer < end) {
       if (
         rightPointer >= end ||
@@ -202,6 +239,15 @@ const Sort: NextPage = () => {
       states.push({
         nums: [...newArray],
         auxilary: { startIndex: start, elements: [...auxilaryElements] },
+        colors: newArray.map((element, index) =>
+          start <= index && index < end
+            ? index === leftPointer && index < mid
+              ? ElementColors.ACTIVE_1
+              : index === rightPointer
+              ? ElementColors.ACTIVE_2
+              : ElementColors.ACTIVE_SECTION
+            : ElementColors.UNSORTED
+        ),
       });
     }
     for (let i = start; i < end; i++) {
@@ -209,6 +255,10 @@ const Sort: NextPage = () => {
     }
     states.push({
       nums: [...newArray],
+      colors:
+        start === 0 && end === newArray.length
+          ? newArray.map((element) => ElementColors.SORTED)
+          : newArray.map((element) => ElementColors.UNSORTED),
     });
     return states;
   };
@@ -220,34 +270,74 @@ const Sort: NextPage = () => {
   ): State[] => {
     if (start >= end - 1) return [];
     const states: State[] = [];
-    let i = start - 1;
+    let i = start;
     let partition = end - 1;
-    states.push({ nums: [...newArray], pivot: newArray[partition].key });
     for (let j = start; j < partition; j++) {
       states.push({
         nums: [...newArray],
-        pivot: newArray[partition].key,
-        cur: newArray[j].key,
+        colors: newArray.map((element, index) =>
+          index === partition
+            ? ElementColors.ACTIVE_2
+            : index === i
+            ? ElementColors.ACTIVE_3
+            : index === j
+            ? ElementColors.ACTIVE_1
+            : index < start
+            ? ElementColors.SORTED
+            : index < end
+            ? ElementColors.ACTIVE_SECTION
+            : ElementColors.UNSORTED
+        ),
       });
       if (newArray[j].value < newArray[partition].value) {
-        i += 1;
-        const temp = newArray[j];
-        newArray[j] = newArray[i];
-        newArray[i] = temp;
+        swap(newArray, i, j);
         states.push({
           nums: [...newArray],
-          pivot: newArray[partition].key,
-          cur: newArray[j].key,
+          colors: newArray.map((element, index) =>
+            index === partition
+              ? ElementColors.ACTIVE_2
+              : index === i
+              ? ElementColors.ACTIVE_1
+              : index === j
+              ? ElementColors.ACTIVE_3
+              : index < start
+              ? ElementColors.SORTED
+              : index < end
+              ? ElementColors.ACTIVE_SECTION
+              : ElementColors.UNSORTED
+          ),
         });
+        i += 1;
       }
     }
-    const temp = newArray[i + 1];
-    newArray[i + 1] = newArray[partition];
-    newArray[partition] = temp;
-    states.push({ nums: [...newArray] });
+    swap(newArray, i, partition);
+    states.push({
+      nums: [...newArray],
+      colors: newArray.map((element, index) =>
+        index === partition
+          ? ElementColors.ACTIVE_1
+          : index === i
+          ? ElementColors.ACTIVE_2
+          : index < start
+          ? ElementColors.SORTED
+          : index < end
+          ? ElementColors.ACTIVE_SECTION
+          : ElementColors.UNSORTED
+      ),
+    });
     return states
-      .concat(quickSort(start, i + 1, newArray))
-      .concat(quickSort(i + 2, end, newArray));
+      .concat(quickSort(start, i, newArray))
+      .concat(quickSort(i + 1, end, newArray))
+      .concat(
+        start === 0 && end === newArray.length
+          ? [
+              {
+                nums: [...newArray],
+                colors: newArray.map((element, index) => ElementColors.SORTED),
+              },
+            ]
+          : []
+      );
   };
 
   const bubbleSort = () => {
@@ -256,16 +346,47 @@ const Sort: NextPage = () => {
 
     for (let i = 0; i < newArray.length; i++) {
       let swapped = false;
-      states.push({ nums: [...newArray] });
       for (let j = 0; j < newArray.length - i - 1; j++) {
+        states.push({
+          nums: [...newArray],
+          colors: newArray.map((element, index) =>
+            index > newArray.length - i - 1
+              ? ElementColors.SORTED
+              : index === j + 1
+              ? ElementColors.ACTIVE_1
+              : index === j
+              ? ElementColors.ACTIVE_2
+              : index > j
+              ? ElementColors.UNSORTED
+              : ElementColors.ACTIVE_SECTION
+          ),
+        });
         if (newArray[j].value > newArray[j + 1].value) {
           swap(newArray, j, j + 1);
-          states.push({ nums: [...newArray] });
+          states.push({
+            nums: [...newArray],
+            colors: newArray.map((element, index) =>
+              index > newArray.length - i - 1
+                ? ElementColors.SORTED
+                : index === j + 1
+                ? ElementColors.ACTIVE_2
+                : index === j
+                ? ElementColors.ACTIVE_1
+                : index > j
+                ? ElementColors.UNSORTED
+                : ElementColors.ACTIVE_SECTION
+            ),
+          });
           swapped = true;
         }
       }
       if (!swapped) break;
     }
+
+    states.push({
+      nums: [...newArray],
+      colors: newArray.map((element) => ElementColors.SORTED),
+    });
     return states;
   };
 
@@ -273,14 +394,39 @@ const Sort: NextPage = () => {
     const newArray = [...array];
     const states: State[] = [];
     for (let i = 1; i < newArray.length; i++) {
-      states.push({ nums: [...newArray], aside: newArray[i].key });
+      states.push({
+        nums: [...newArray],
+        aside: newArray[i].key,
+        colors: newArray.map((element, index) =>
+          index === i
+            ? ElementColors.ACTIVE_1
+            : index < i
+            ? ElementColors.ACTIVE_SECTION
+            : ElementColors.UNSORTED
+        ),
+      });
       let j = i - 1;
       for (; j >= 0 && newArray[j].value > newArray[j + 1].value; j--) {
         swap(newArray, j, j + 1);
-        states.push({ nums: [...newArray], aside: newArray[j].key });
+        states.push({
+          nums: [...newArray],
+          aside: newArray[j].key,
+          colors: newArray.map((element, index) =>
+            index === j
+              ? ElementColors.ACTIVE_1
+              : index === j + 1
+              ? ElementColors.ACTIVE_2
+              : index <= i
+              ? ElementColors.ACTIVE_SECTION
+              : ElementColors.UNSORTED
+          ),
+        });
       }
-      states.push({ nums: [...newArray] });
     }
+    states.push({
+      nums: [...newArray],
+      colors: newArray.map((element) => ElementColors.SORTED),
+    });
     return states;
   };
 
@@ -290,13 +436,40 @@ const Sort: NextPage = () => {
     for (let i = 0; i < newArray.length; i++) {
       let smallestIndex = i;
       for (let j = i; j < newArray.length; j++) {
+        states.push({
+          nums: [...newArray],
+          colors: newArray.map((element, index) =>
+            index === j
+              ? ElementColors.ACTIVE_1
+              : index === smallestIndex
+              ? ElementColors.ACTIVE_2
+              : index < i
+              ? ElementColors.SORTED
+              : index < j
+              ? ElementColors.ACTIVE_SECTION
+              : ElementColors.UNSORTED
+          ),
+        });
         if (newArray[j].value < newArray[smallestIndex].value) {
           smallestIndex = j;
         }
       }
       swap(newArray, i, smallestIndex);
-      states.push({ nums: [...newArray] });
+      states.push({
+        nums: [...newArray],
+        colors: newArray.map((element, index) =>
+          index === smallestIndex
+            ? ElementColors.ACTIVE_2
+            : index < i
+            ? ElementColors.SORTED
+            : ElementColors.ACTIVE_SECTION
+        ),
+      });
     }
+    states.push({
+      nums: [...newArray],
+      colors: newArray.map((element) => ElementColors.SORTED),
+    });
     return states;
   };
 
@@ -334,7 +507,7 @@ const Sort: NextPage = () => {
       </Form>
       <svg
         style={{
-          height: windowHeight,
+          height: "100%",
           width: "100%",
           marginRight: "0px",
           marginLeft: "0px",
