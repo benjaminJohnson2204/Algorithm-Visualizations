@@ -37,15 +37,16 @@ const minArrayLength = 2,
   minNumVal = 1,
   maxNumVal = 10;
 
+let paused = false,
+  steps: State[] = [],
+  curStepIndex = 0;
+
 const Sort: NextPage = () => {
   const margin = { top: 20, right: 100, bottom: 30, left: 100 };
   const [sortingType, setSortingType] = useState("merge");
   const [sorting, setSorting] = useState(false);
 
   const [transitionDuration, setTransitionDuration] = useState(0);
-
-  const [steps, setSteps] = useState<State[]>([]);
-  const [curStep, setCurStep] = useState(0);
 
   const [array, setArray] = useState(() => {
     const initialArray: ArrayElement[] = [];
@@ -105,41 +106,36 @@ const Sort: NextPage = () => {
 
   useEffect(() => {
     if (sorting) {
+      paused = false;
       if (steps.length === 0) {
         switch (sortingType) {
           case "merge":
-            setSteps(mergeSort());
+            steps = mergeSort();
             break;
           case "quick":
-            setSteps(quickSort());
+            steps = quickSort();
             break;
           case "bubble":
-            setSteps(bubbleSort());
+            steps = bubbleSort();
             break;
           case "insertion":
-            setSteps(insertionSort());
+            steps = insertionSort();
             break;
           case "selection":
-            setSteps(selectionSort());
+            steps = selectionSort();
             break;
         }
       }
-      if (curStep < steps.length) {
-        runSortingStep().then(() =>
-          setCurStep((prevCurStep) => prevCurStep + 1)
-        );
-      } else {
-        // setSorting(false);
-        // setSteps([]);
-      }
+      curStepIndex = 0;
+      runSortingStep();
+    } else {
+      paused = true;
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorting, curStep, steps]);
+  }, [sorting]);
 
   const runSortingStep = async () => {
-    const state = steps[curStep];
-    console.log(state);
+    const state = steps[curStepIndex];
     const newTransition = d3
       .transition()
       .duration(transitionDuration)
@@ -197,6 +193,12 @@ const Sort: NextPage = () => {
         return ElementColors.UNSORTED;
       });
     await newTransition.end();
+    curStepIndex++;
+    if (curStepIndex >= steps.length) {
+      steps = [];
+      return;
+    }
+    if (!paused) runSortingStep();
   };
 
   const mergeSort = (
