@@ -25,6 +25,20 @@ export interface State {
   auxilary?: Auxilary;
 }
 
+const minNumVal = 1,
+  maxNumVal = 10;
+
+export const getRandomArray = (length: number) => {
+  const initialArray: ArrayElement[] = [];
+  for (let i = 0; i < length; i++) {
+    initialArray.push({
+      key: i,
+      value: minNumVal + Math.floor(Math.random() * (maxNumVal - minNumVal)),
+    });
+  }
+  return initialArray;
+};
+
 export const mergeSort = (
   start: number,
   end: number,

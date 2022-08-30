@@ -21,7 +21,12 @@ const problems = [
       {
         shortName: "linked-list",
         longName: "Linked Lists",
-        children: [],
+        children: [
+          {
+            shortName: "reverse",
+            longName: "Reverse a Linked List",
+          },
+        ],
       },
     ],
   },

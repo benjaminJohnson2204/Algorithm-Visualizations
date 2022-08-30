@@ -9,6 +9,7 @@ import {
   ArrayElement,
   bubbleSort,
   ElementColors,
+  getRandomArray,
   insertionSort,
   mergeSort,
   quickSort,
@@ -17,24 +18,10 @@ import {
 } from "lib/dsa/array/sort";
 import InputControls from "@/components/contols/InputControls";
 
-const minNumVal = 1,
-  maxNumVal = 10;
-
 let paused = false,
   steps: State[] = [],
   curStepIndex = 0,
   transitionDuration = 250;
-
-const getRandomArray = (length: number) => {
-  const initialArray: ArrayElement[] = [];
-  for (let i = 0; i < length; i++) {
-    initialArray.push({
-      key: i,
-      value: minNumVal + Math.floor(Math.random() * (maxNumVal - minNumVal)),
-    });
-  }
-  return initialArray;
-};
 
 const Sort: NextPage = () => {
   const margin = { top: 20, right: 100, bottom: 30, left: 100 };
