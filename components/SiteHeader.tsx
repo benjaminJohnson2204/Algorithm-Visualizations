@@ -26,6 +26,10 @@ const problems = [
             shortName: "reverse",
             longName: "Reverse a Linked List",
           },
+          {
+            shortName: "detect-cycle",
+            longName: "Detect a Cycle in a Linked List",
+          },
         ],
       },
     ],
