@@ -238,7 +238,13 @@ const Reverse: NextPage = () => {
     if (curStepIndex >= steps.length) {
       steps = [];
       setBegun(false);
-      setList(state.list);
+      setList(
+        state.list.map((element, index, array) => ({
+          ...element,
+          key: index,
+          nextKey: index === array.length - 1 ? -1 : index + 1,
+        }))
+      );
       return;
     }
     if (!paused) runSortingStep();
