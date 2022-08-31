@@ -1,13 +1,16 @@
+import InputControls from "@/components/contols/InputControls";
+import SpeedControls from "@/components/contols/SpeedControls";
 import * as d3 from "d3";
 import {
   getRandomList,
   ListNode,
+  NodeColors,
   reverseLinkedList,
   State,
 } from "lib/dsa/linked-list/reverse";
 import { NextPage } from "next";
 import { useEffect, useState } from "react";
-import { Button, Container } from "react-bootstrap";
+import { Button, Col, Container, Row } from "react-bootstrap";
 
 let paused = false,
   steps: State[] = [],
@@ -137,9 +140,8 @@ const Reverse: NextPage = () => {
       paused = false;
       if (steps.length === 0) {
         steps = reverseLinkedList([...list]);
+        curStepIndex = 0;
       }
-      curStepIndex = 0;
-
       runSortingStep();
     } else {
       paused = true;
@@ -148,7 +150,6 @@ const Reverse: NextPage = () => {
 
   const runSortingStep = async () => {
     const state = steps[curStepIndex];
-    console.log(state.list);
     const newTransition = d3
       .transition()
       .duration(transitionDuration)
@@ -159,14 +160,25 @@ const Reverse: NextPage = () => {
       .selectAll(".node")
       .transition(newTransition);
 
-    nodeGroup.select("circle").attr("cx", (d, i: number) => {
-      for (let j = 0; j < state.list.length; j++) {
-        if (state.list[j].key === i) {
-          return j * spaceBetweenNodes + margin.left + nodeRadius;
+    nodeGroup
+      .select("circle")
+      .attr("cx", (d, i: number) => {
+        for (let j = 0; j < state.list.length; j++) {
+          if (state.list[j].key === i) {
+            return j * spaceBetweenNodes + margin.left + nodeRadius;
+          }
         }
-      }
-      return 0;
-    });
+        return 0;
+      })
+      .style("fill", (datum, i: number) => {
+        const d = datum as ListNode;
+        for (let newIndex = 0; newIndex < state.list.length; newIndex++) {
+          if (state.list[newIndex].key === i) {
+            return state.colors ? state.colors[newIndex] : NodeColors.DEFAULT;
+          }
+        }
+        return NodeColors.DEFAULT;
+      });
 
     nodeGroup.select("text").attr("x", (datum, i: number) => {
       const d = datum as ListNode;
@@ -181,6 +193,7 @@ const Reverse: NextPage = () => {
       }
       return 0;
     });
+
     nodeGroup.select("path").attr("d", (datum, i: number) => {
       const d = datum as ListNode;
       let index = -1,
@@ -234,13 +247,43 @@ const Reverse: NextPage = () => {
   return (
     <div className="page">
       <h1 className="m-3">Reverse a Linked List</h1>
-      <Container fluid>
-        <Button
-          className="m-3"
-          onClick={() => setBegun((prevBegun) => !prevBegun)}
-        >
-          {begun ? "Pause" : "Start"}
-        </Button>
+      <Container>
+        <Row>
+          <Col xs={12} md={4}>
+            <SpeedControls
+              setTransitionDuration={(duration) =>
+                (transitionDuration = duration)
+              }
+            />
+          </Col>
+          <Col xs={12} md={4}>
+            <Button
+              className="m-3"
+              onClick={() => setBegun((prevBegun) => !prevBegun)}
+            >
+              {begun ? "Pause" : "Start"}
+            </Button>
+          </Col>
+          <Col xs={12} md={4}>
+            <InputControls
+              maxLength={25}
+              setCustomInput={(input) => {
+                try {
+                  setList(
+                    eval(input).map(
+                      (num: number, index: number, array: number[]) => ({
+                        key: index,
+                        value: num,
+                        nextKey: index === array.length - 1 ? -1 : index + 1,
+                      })
+                    )
+                  );
+                } catch (error) {}
+              }}
+              setRandomInput={(length) => setList(getRandomList(length))}
+            />
+          </Col>
+        </Row>
       </Container>
       <svg
         style={{

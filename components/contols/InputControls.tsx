@@ -1,6 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 
 export default function InputControls(props: {
+  maxLength: number;
   setCustomInput: (customInput: string) => void;
   setRandomInput: (randomInputLength: number) => void;
 }) {
@@ -23,7 +24,7 @@ export default function InputControls(props: {
         <Form.Label>Size</Form.Label>
         <Form.Range
           min="1"
-          max="200"
+          max={props.maxLength.toString()}
           defaultValue={"5"}
           onChange={(event) =>
             (randomInputLength = parseInt(event.target.value))

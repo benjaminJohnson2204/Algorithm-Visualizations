@@ -93,8 +93,8 @@ const Sort: NextPage = () => {
             steps = selectionSort(array);
             break;
         }
+        curStepIndex = 0;
       }
-      curStepIndex = 0;
       runSortingStep();
     } else {
       paused = true;
@@ -212,6 +212,7 @@ const Sort: NextPage = () => {
           </Col>
           <Col xs={12} md={4}>
             <InputControls
+              maxLength={200}
               setCustomInput={(input) => {
                 try {
                   setArray(

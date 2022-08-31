@@ -1,3 +1,9 @@
+export class NodeColors {
+  static DEFAULT = "white";
+  static ACTIVE_1 = "green";
+  static ACTIVE_2 = "blue";
+}
+
 export interface ListNode {
   key: number;
   value: number;
@@ -17,7 +23,7 @@ export const getRandomList = (length: number) => {
   for (let i = 0; i < length; i++) {
     initiaList.push({
       key: i,
-      value: i, // minNumVal + Math.floor(Math.random() * (maxNumVal - minNumVal)),
+      value: minNumVal + Math.floor(Math.random() * (maxNumVal - minNumVal)),
       nextKey: i === length - 1 ? -1 : i + 1,
     });
   }
@@ -36,14 +42,41 @@ export const reverseLinkedList = (list: ListNode[]) => {
         node.key === originalHead.key ? list[nextIndex].nextKey : node.nextKey,
     }));
     originalHead.nextKey = list[nextIndex].nextKey;
-    states.push({ list: list.map((node) => ({ ...node })) });
+    states.push({
+      list: list.map((node) => ({ ...node })),
+      colors: list.map((node, index) =>
+        index === nextIndex
+          ? NodeColors.ACTIVE_1
+          : index === 0
+          ? NodeColors.ACTIVE_2
+          : NodeColors.DEFAULT
+      ),
+    });
 
     list[nextIndex].nextKey = list[0].key;
-    states.push({ list: list.map((node) => ({ ...node })) });
+    states.push({
+      list: list.map((node) => ({ ...node })),
+      colors: list.map((node, index) =>
+        index === nextIndex
+          ? NodeColors.ACTIVE_1
+          : index === 0
+          ? NodeColors.ACTIVE_2
+          : NodeColors.DEFAULT
+      ),
+    });
 
     list.splice(0, 0, list[nextIndex]);
     list.splice(nextIndex + 1, 1);
-    states.push({ list: list.map((node) => ({ ...node })) });
+    states.push({
+      list: list.map((node) => ({ ...node })),
+      colors: list.map((node, index) =>
+        index === nextIndex
+          ? NodeColors.ACTIVE_1
+          : index === 0
+          ? NodeColors.ACTIVE_2
+          : NodeColors.DEFAULT
+      ),
+    });
 
     for (let j = 0; j < list.length; j++) {
       if (list[j].key === originalHead.nextKey) {
