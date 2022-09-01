@@ -17,6 +17,7 @@ let paused = false,
   transitionDuration = 500,
   nodeRadius = 25,
   spaceBetweenNodes = 50,
+  canvasHeight = 100,
   markerBoxWidth = 20,
   markerBoxHeight = 20;
 
@@ -33,16 +34,25 @@ const LinkedList = (props: {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    nodeRadius =
-      (window.innerWidth - margin.left - margin.right) /
-      (3 * list.length + 1) /
-      2;
-    spaceBetweenNodes =
-      (window.innerWidth - margin.left - margin.right) /
-        ((2 * list.length) / 3) -
-      2 * nodeRadius;
+    canvasHeight =
+      window.innerHeight -
+      (d3.select(".list")!.node() as Element)!.getBoundingClientRect()!.y;
 
-    renderList(list, nodeRadius, spaceBetweenNodes);
+    nodeRadius = Math.min(
+      (window.innerWidth - margin.left - margin.right) /
+        (3 * list.length - 2) /
+        2,
+      canvasHeight / 2.125
+    );
+
+    spaceBetweenNodes =
+      (window.innerWidth - margin.left - margin.right - 2 * nodeRadius) /
+      Math.max(1, list.length - 1);
+
+    markerBoxWidth = nodeRadius / 2;
+    markerBoxHeight = nodeRadius / 2;
+
+    renderList(list);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
 
@@ -59,14 +69,7 @@ const LinkedList = (props: {
     }
   });
 
-  const renderList = (
-    list: ListNode[],
-    nodeRadius: number,
-    spaceBetweenNodes: number
-  ) => {
-    const markerBoxWidth = nodeRadius / 2;
-    const markerBoxHeight = nodeRadius / 2;
-
+  const renderList = (list: ListNode[]) => {
     d3.select(".list").selectAll("*").remove();
 
     d3.select(".list")
@@ -103,7 +106,7 @@ const LinkedList = (props: {
       .attr("fill", "white")
       .attr("stroke-width", nodeRadius / 10)
       .attr("cx", (d, i) => i * spaceBetweenNodes + margin.left + nodeRadius)
-      .attr("cy", 100)
+      .attr("cy", canvasHeight / 2)
       .attr("r", nodeRadius);
 
     nodeGroup
@@ -115,7 +118,7 @@ const LinkedList = (props: {
           margin.left +
           (nodeRadius * (4 - (d.value.toString().length % 4))) / 4
       )
-      .attr("y", 100 + nodeRadius * 0.125)
+      .attr("y", canvasHeight / 2 + nodeRadius * 0.125)
       .attr(
         "font-size",
         (d, i) =>
@@ -129,7 +132,7 @@ const LinkedList = (props: {
         if (d.nextKey === -1)
           return `M ${
             i * spaceBetweenNodes + nodeRadius + margin.left + nodeRadius
-          }, 100`;
+          }, ${canvasHeight / 2}`;
         let nextIndex = i;
         for (let j = 0; j < list.length; j++) {
           if (list[j].key === d.nextKey) {
@@ -141,20 +144,21 @@ const LinkedList = (props: {
           nodeRadius * (nextIndex > i ? 1 : -1) +
           margin.left +
           nodeRadius
-        }, 100 ${
+        }, ${canvasHeight / 2} ${
           Math.abs(nextIndex - i) > 1
             ? "L" +
               (((i + nextIndex) / 2) * spaceBetweenNodes -
                 markerBoxWidth / 4 +
                 margin.left) +
-              ", 50"
+              ", " +
+              canvasHeight / 4
             : ""
         } L ${
           nextIndex * spaceBetweenNodes +
           nodeRadius * (nextIndex > i ? 0 : 2) -
           (markerBoxWidth / 2) * (nextIndex > i ? 1 : -1) +
           margin.left
-        }, 100`;
+        }, ${canvasHeight / 2}`;
       })
       .attr("marker-end", "url(#arrow)")
       .attr("fill", "none")
@@ -221,7 +225,7 @@ const LinkedList = (props: {
       if (state.list[index].nextKey === -1)
         return `M ${
           index * spaceBetweenNodes + nodeRadius + margin.left + nodeRadius
-        } 100`;
+        } ${canvasHeight / 2}`;
       for (let j = 0; j < state.list.length; j++) {
         if (state.list[j].key === state.list[index].nextKey) {
           nextIndex = j;
@@ -232,20 +236,21 @@ const LinkedList = (props: {
         nodeRadius * (nextIndex > index ? 1 : -1) +
         margin.left +
         nodeRadius
-      }, 100 ${
+      }, ${canvasHeight / 2} ${
         Math.abs(nextIndex - index) > 1
           ? "L" +
             (((index + nextIndex) / 2) * spaceBetweenNodes -
               markerBoxWidth / 4 +
               margin.left) +
-            ", 50"
+            ", " +
+            canvasHeight / 4
           : ""
       } L ${
         nextIndex * spaceBetweenNodes +
         nodeRadius * (nextIndex > index ? 0 : 2) -
         (markerBoxWidth / 2) * (nextIndex > index ? 1 : -1) +
         margin.left
-      }, 100`;
+      }, ${canvasHeight / 2}`;
     });
     await newTransition.end();
     curStepIndex++;
@@ -291,11 +296,19 @@ const LinkedList = (props: {
               setCustomInput={(input) => {
                 try {
                   setList(
-                    eval(input).map(
+                    eval(input.split("]")[0] + "]").map(
                       (num: number, index: number, array: number[]) => ({
                         key: index,
                         value: num,
-                        nextKey: index === array.length - 1 ? -1 : index + 1,
+                        nextKey:
+                          index === array.length - 1
+                            ? props.canCycle
+                              ? Math.min(
+                                  eval(input.split("]")[1].trim()),
+                                  array.length - 1
+                                )
+                              : -1
+                            : index + 1,
                       })
                     )
                   );

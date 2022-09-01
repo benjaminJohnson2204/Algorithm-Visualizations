@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 
 export default function InputControls(props: {
@@ -5,7 +6,7 @@ export default function InputControls(props: {
   setCustomInput: (customInput: string) => void;
   setRandomInput: (randomInputLength: number) => void;
 }) {
-  let randomInputLength = 5;
+  const [randomInputLength, setRandomInputLength] = useState(5);
 
   return (
     <Form
@@ -27,7 +28,7 @@ export default function InputControls(props: {
           max={props.maxLength.toString()}
           defaultValue={"5"}
           onChange={(event) =>
-            (randomInputLength = parseInt(event.target.value))
+            setRandomInputLength(parseInt(event.target.value))
           }
         />
       </Form.Group>
