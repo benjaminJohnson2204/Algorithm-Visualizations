@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 
 import {
+  getRandomExtraParams,
   getRandomList,
   ListNode,
   NodeColors,
@@ -23,13 +24,18 @@ let paused = false,
 
 const LinkedList = (props: {
   title: string;
-  algorithm: (list: ListNode[]) => State[];
+  algorithm: (list: ListNode[], ...extraParams: number[]) => State[];
+  numExtraParams?: number;
   canCycle?: boolean;
   cleanup?: boolean;
 }) => {
   const margin = { top: 20, right: 100, bottom: 30, left: 100 };
 
   const [list, setList] = useState(getRandomList(5, props.canCycle));
+  const [extraParams, setExtraParams] = useState(
+    getRandomExtraParams(list, props.numExtraParams)
+  );
+  const [invalidInput, setInvalidInput] = useState(false);
   const [begun, setBegun] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -60,7 +66,7 @@ const LinkedList = (props: {
     if (begun) {
       paused = false;
       if (steps.length === 0) {
-        steps = props.algorithm([...list]);
+        steps = props.algorithm([...list], ...extraParams);
         curStepIndex = 0;
       }
       if (steps.length > 0) runStep();
@@ -222,6 +228,7 @@ const LinkedList = (props: {
           index = j;
         }
       }
+      if (!state.list[index]) return "";
       if (state.list[index].nextKey === -1)
         return `M ${
           index * spaceBetweenNodes + nodeRadius + margin.left + nodeRadius
@@ -271,8 +278,8 @@ const LinkedList = (props: {
   };
 
   return (
-    <div className="page">
-      <h1 className="m-3">{props.title}</h1>
+    <div className='page'>
+      <h1 className='m-3'>{props.title}</h1>
       <Container>
         <Row>
           <Col xs={12} md={4}>
@@ -284,7 +291,7 @@ const LinkedList = (props: {
           </Col>
           <Col xs={12} md={4}>
             <Button
-              className="m-3"
+              className='m-3'
               onClick={() => setBegun((prevBegun) => !prevBegun)}
             >
               {begun ? "Pause" : "Start"}
@@ -292,9 +299,25 @@ const LinkedList = (props: {
           </Col>
           <Col xs={12} md={4}>
             <InputControls
+              defaultInput={`[${list
+                .map((node) => node.value)
+                .toString()}] ${extraParams.toString()}`}
               maxLength={25}
+              invalid={invalidInput}
               setCustomInput={(input) => {
                 try {
+                  const providedExtraParams = input
+                    .split("]")[1]
+                    .trim()
+                    .split(",");
+                  if (
+                    providedExtraParams.length !== props.numExtraParams ||
+                    providedExtraParams.some(
+                      (param) => !param || (parseInt(param) || -1) < 0
+                    )
+                  ) {
+                    return setInvalidInput(true);
+                  }
                   setList(
                     eval(input.split("]")[0] + "]").map(
                       (num: number, index: number, array: number[]) => ({
@@ -312,11 +335,20 @@ const LinkedList = (props: {
                       })
                     )
                   );
-                } catch (error) {}
+                  setExtraParams(
+                    providedExtraParams.map((param) => parseInt(param.trim()))
+                  );
+                  setInvalidInput(false);
+                } catch (error) {
+                  setInvalidInput(true);
+                }
               }}
-              setRandomInput={(length) =>
-                setList(getRandomList(length, props.canCycle))
-              }
+              setRandomInput={(length) => {
+                setList(getRandomList(length, props.canCycle));
+                setExtraParams(
+                  getRandomExtraParams(list, props.numExtraParams)
+                );
+              }}
             />
           </Col>
         </Row>
@@ -331,10 +363,11 @@ const LinkedList = (props: {
           marginLeft: "0px",
         }}
       >
-        <g className="list" />
+        <g className='list' />
       </svg>
     </div>
   );
 };
 
 export default LinkedList;
+

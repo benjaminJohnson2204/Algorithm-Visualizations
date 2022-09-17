@@ -173,8 +173,8 @@ const Sort: NextPage = () => {
   };
 
   return (
-    <div className="page">
-      <h1 className="m-3">Array Sorting</h1>
+    <div className='page'>
+      <h1 className='m-3'>Array Sorting</h1>
       <Container>
         <Row>
           <Col xs={12} md={4}>
@@ -193,17 +193,17 @@ const Sort: NextPage = () => {
                   onChange={(event: React.ChangeEvent<any>) =>
                     setSortingType(event.target.value)
                   }
-                  defaultValue="merge"
+                  defaultValue='merge'
                 >
-                  <option value="merge">Merge Sort</option>
-                  <option value="quick">Quick Sort</option>
-                  <option value="insertion">Insertion Sort</option>
-                  <option value="selection">Selection Sort</option>
-                  <option value="bubble">Bubble Sort</option>
+                  <option value='merge'>Merge Sort</option>
+                  <option value='quick'>Quick Sort</option>
+                  <option value='insertion'>Insertion Sort</option>
+                  <option value='selection'>Selection Sort</option>
+                  <option value='bubble'>Bubble Sort</option>
                 </Form.Select>
               </Form.Group>
               <Button
-                className="m-3"
+                className='m-3'
                 onClick={() => setSorting((prevSorting) => !prevSorting)}
               >
                 {sorting ? "Pause" : "Start"}
@@ -212,6 +212,7 @@ const Sort: NextPage = () => {
           </Col>
           <Col xs={12} md={4}>
             <InputControls
+              defaultInput={array.map((element) => element.value).toString()}
               maxLength={200}
               setCustomInput={(input) => {
                 try {
@@ -236,10 +237,11 @@ const Sort: NextPage = () => {
           marginLeft: "0px",
         }}
       >
-        <g className="bars" />
+        <g className='bars' />
       </svg>
     </div>
   );
 };
 
 export default Sort;
+

@@ -14,3 +14,4 @@ const DetectCycle: NextPage = () => {
 };
 
 export default DetectCycle;
+

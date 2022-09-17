@@ -30,6 +30,10 @@ const problems = [
             shortName: "detect-cycle",
             longName: "Detect a Cycle in a Linked List",
           },
+          {
+            shortName: "remove-nth-from-end",
+            longName: "Remove Nth Node from End of Linked List",
+          },
         ],
       },
     ],
@@ -78,14 +82,14 @@ const SiteHeader = () => {
   };
 
   return (
-    <Navbar collapseOnSelect bg="info" variant="light" expand="lg">
+    <Navbar collapseOnSelect bg='info' variant='light' expand='lg'>
       <Container fluid>
-        <Link href="/" passHref>
+        <Link href='/' passHref>
           <Navbar.Brand>Home</Navbar.Brand>
         </Link>
-        <Navbar.Toggle aria-controls="navbar" />
-        <Navbar.Collapse id="navbar">
-          <Nav className="me-auto">
+        <Navbar.Toggle aria-controls='navbar' />
+        <Navbar.Collapse id='navbar'>
+          <Nav className='me-auto'>
             {problems.map((topic, topicIndex) => (
               <NavDropdown
                 key={topicIndex}
@@ -101,7 +105,7 @@ const SiteHeader = () => {
               >
                 {topic.children.map((subTopic, subTopicIndex) => (
                   <NavDropdown
-                    drop="end"
+                    drop='end'
                     key={subTopicIndex}
                     title={
                       <text
@@ -146,3 +150,4 @@ const SiteHeader = () => {
 };
 
 export default SiteHeader;
+

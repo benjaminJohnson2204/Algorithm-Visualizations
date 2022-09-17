@@ -3,11 +3,12 @@ import { Button, Form } from "react-bootstrap";
 
 export default function InputControls(props: {
   maxLength: number;
+  invalid?: boolean;
+  defaultInput: string;
   setCustomInput: (customInput: string) => void;
   setRandomInput: (randomInputLength: number) => void;
 }) {
   const [randomInputLength, setRandomInputLength] = useState(5);
-
   return (
     <Form
       onSubmit={(event: React.ChangeEvent<any>) => {
@@ -17,14 +18,15 @@ export default function InputControls(props: {
     >
       <Form.Group>
         <h4>Custom Input</h4>
-        <Form.Control type="text" />
+        <Form.Control type='text' defaultValue={props.defaultInput} />
       </Form.Group>
-      <Button type="submit">Set</Button>
+      {props.invalid && <p className='text-danger'>Invalid input</p>}
+      <Button type='submit'>Set</Button>
       <h4>Random Input</h4>
       <Form.Group>
         <Form.Label>Size</Form.Label>
         <Form.Range
-          min="1"
+          min='1'
           max={props.maxLength.toString()}
           defaultValue={"5"}
           onChange={(event) =>
@@ -39,3 +41,4 @@ export default function InputControls(props: {
     </Form>
   );
 }
+

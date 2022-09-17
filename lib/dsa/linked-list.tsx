@@ -40,6 +40,18 @@ export const getRandomList = (
   return initiaList;
 };
 
+export const getRandomExtraParams = (
+  list: ListNode[],
+  numExtraParams: number | undefined
+) => {
+  const result: number[] = [];
+  if (!numExtraParams) return result;
+  for (let i = 0; i < numExtraParams; i++) {
+    result.push(Math.floor(Math.random() * (list.length - 1) + 1));
+  }
+  return result;
+};
+
 export const reverseLinkedList = (list: ListNode[]) => {
   if (list.length <= 1) return [];
   const states = [];
@@ -176,3 +188,49 @@ export const listHasCycle = (list: ListNode[]) => {
   });
   return states;
 };
+
+export const removeNthFromEnd = (list: ListNode[], n: number) => {
+  if (n > list.length) return [];
+  const states = [];
+  let key1 = 0,
+    key2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    states.push(getStateFromList(list, key1, key2));
+    key2 = list[key2].nextKey;
+  }
+  if (key2 === -1) {
+    states.push(getStateFromList(list.slice(1), key1, key2));
+    return states;
+  }
+  while (list[key2].nextKey !== -1) {
+    states.push(getStateFromList(list, key1, key2));
+    key2 = list[key2].nextKey;
+    key1 = list[key1].nextKey;
+  }
+  states.push(getStateFromList(list, key1, key2));
+  if (key1 === 0) {
+    states.push(getStateFromList(list.slice(1), key1, key2));
+    return states;
+  }
+  const nthKey = list[key1].nextKey;
+  list[key1].nextKey = list[nthKey].nextKey;
+  states.push(getStateFromList(list, key1, key2));
+  list[nthKey].nextKey = -1;
+  states.push(getStateFromList(list, key1, key2));
+  return states;
+};
+
+const getStateFromList = (list: ListNode[], key1: number, key2: number) => ({
+  list: list.map((node) => ({ ...node })),
+  colors: list.map((element, index) =>
+    index === key1
+      ? index === key2
+        ? NodeColors.INTERSECTION
+        : NodeColors.ACTIVE_1
+      : index === key2
+      ? NodeColors.ACTIVE_2
+      : NodeColors.DEFAULT
+  ),
+});
+
