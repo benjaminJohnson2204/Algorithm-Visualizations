@@ -90,6 +90,13 @@ const SiteHeader = () => {
         <Navbar.Toggle aria-controls='navbar' />
         <Navbar.Collapse id='navbar'>
           <Nav className='me-auto'>
+            <Navbar.Brand
+              href='https://github.com/benjaminJohnson2204/Algorithm-Visualizations'
+              rel='noopener noreferrer'
+              target='_blank'
+            >
+              View Source Code
+            </Navbar.Brand>
             {problems.map((topic, topicIndex) => (
               <NavDropdown
                 key={topicIndex}
