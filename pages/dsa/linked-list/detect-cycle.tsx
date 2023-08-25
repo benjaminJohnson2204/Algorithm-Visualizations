@@ -1,12 +1,12 @@
-import LinkedList from "@/components/LinkedList";
-import { listHasCycle } from "lib/dsa/linked-list";
-import { NextPage } from "next";
+import LinkedList from '@/components/LinkedList';
+import { DetectLinkedListCycleAlgorithm } from 'lib/algorithms/linkedList/detectCycle';
+import { NextPage } from 'next';
 
 const DetectCycle: NextPage = () => {
   return (
     <LinkedList
-      title={"Detect a Cycle in a Linked List"}
-      algorithm={listHasCycle}
+      title={'Detect a Cycle in a Linked List'}
+      algoirthmGenerator={(list) => new DetectLinkedListCycleAlgorithm(list)}
       canCycle={true}
       cleanup={false}
     />
@@ -14,4 +14,3 @@ const DetectCycle: NextPage = () => {
 };
 
 export default DetectCycle;
-

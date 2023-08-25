@@ -1,38 +1,38 @@
-import { Container, Dropdown, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/router";
+import { Container, Dropdown, Nav, Navbar, NavDropdown } from 'react-bootstrap';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 const problems = [
   {
-    shortName: "dsa",
-    longName: "Data Structures and Algorithms",
+    shortName: 'dsa',
+    longName: 'Data Structures and Algorithms',
     children: [
       {
-        shortName: "array",
-        longName: "Arrays",
+        shortName: 'array',
+        longName: 'Arrays',
         children: [
           {
-            shortName: "sort",
-            longName: "Sorting",
+            shortName: 'sort',
+            longName: 'Sorting',
           },
         ],
       },
       {
-        shortName: "linked-list",
-        longName: "Linked Lists",
+        shortName: 'linked-list',
+        longName: 'Linked Lists',
         children: [
           {
-            shortName: "reverse",
-            longName: "Reverse a Linked List",
+            shortName: 'reverse',
+            longName: 'Reverse a Linked List',
           },
           {
-            shortName: "detect-cycle",
-            longName: "Detect a Cycle in a Linked List",
+            shortName: 'detect-cycle',
+            longName: 'Detect a Cycle in a Linked List',
           },
           {
-            shortName: "remove-nth-from-end",
-            longName: "Remove Nth Node from End of Linked List",
+            shortName: 'remove-nth-from-end',
+            longName: 'Remove Nth Node from End of Linked List',
           },
         ],
       },
@@ -95,7 +95,7 @@ const SiteHeader = () => {
               rel='noopener noreferrer'
               target='_blank'
             >
-              View Source Code
+              Source Code
             </Navbar.Brand>
             {problems.map((topic, topicIndex) => (
               <NavDropdown
@@ -157,4 +157,3 @@ const SiteHeader = () => {
 };
 
 export default SiteHeader;
-

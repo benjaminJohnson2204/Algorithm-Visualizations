@@ -1,19 +1,20 @@
-import * as d3 from "d3";
+import * as d3 from 'd3';
 
 import {
   getRandomExtraParams,
   getRandomList,
   ListNode,
   NodeColors,
-  State,
-} from "lib/dsa/linked-list";
-import { useEffect, useState } from "react";
-import { Button, Col, Container, Row } from "react-bootstrap";
-import InputControls from "./contols/InputControls";
-import SpeedControls from "./contols/SpeedControls";
+  LinkedListState,
+  LinkedListAlgorithm,
+} from 'lib/algorithms/linkedList';
+import { useEffect, useState } from 'react';
+import { Button, Col, Container, Row } from 'react-bootstrap';
+import InputControls from './contols/InputControls';
+import SpeedControls from './contols/SpeedControls';
 
 let paused = false,
-  steps: State[] = [],
+  states: LinkedListState[] = [],
   curStepIndex = 0,
   transitionDuration = 500,
   nodeRadius = 25,
@@ -24,7 +25,10 @@ let paused = false,
 
 const LinkedList = (props: {
   title: string;
-  algorithm: (list: ListNode[], ...extraParams: number[]) => State[];
+  algoirthmGenerator: (
+    list: ListNode[],
+    ...extraParams: number[]
+  ) => LinkedListAlgorithm;
   numExtraParams?: number;
   canCycle?: boolean;
   cleanup?: boolean;
@@ -37,13 +41,15 @@ const LinkedList = (props: {
   );
   const [invalidInput, setInvalidInput] = useState(false);
   const [begun, setBegun] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
+    // Determine canvas height
     canvasHeight =
       window.innerHeight -
-      (d3.select(".list")!.node() as Element)!.getBoundingClientRect()!.y;
+      (d3.select('.list')!.node() as Element)!.getBoundingClientRect()!.y;
 
+    // Determine node radius from screen size
     nodeRadius = Math.min(
       (window.innerWidth - margin.left - margin.right) /
         (3 * list.length - 2) /
@@ -51,10 +57,12 @@ const LinkedList = (props: {
       canvasHeight / 2.125
     );
 
+    // Determine spacing between nodes
     spaceBetweenNodes =
       (window.innerWidth - margin.left - margin.right - 2 * nodeRadius) /
       Math.max(1, list.length - 1);
 
+    // Determine marker box size
     markerBoxWidth = nodeRadius / 2;
     markerBoxHeight = nodeRadius / 2;
 
@@ -65,76 +73,85 @@ const LinkedList = (props: {
   useEffect(() => {
     if (begun) {
       paused = false;
-      if (steps.length === 0) {
-        steps = props.algorithm([...list], ...extraParams);
+      if (states.length === 0) {
+        const algorithm = props.algoirthmGenerator(list, ...extraParams);
+        algorithm.run();
+        states = algorithm.getStateHistory() as LinkedListState[];
         curStepIndex = 0;
       }
-      if (steps.length > 0) runStep();
+      if (states.length > 0) runStep();
     } else {
       paused = true;
     }
   });
 
   const renderList = (list: ListNode[]) => {
-    d3.select(".list").selectAll("*").remove();
+    // Remove all nodes
+    d3.select('.list').selectAll('*').remove();
 
-    d3.select(".list")
-      .append("defs")
-      .append("marker")
-      .attr("id", "arrow")
-      .attr("refX", markerBoxWidth / 2)
-      .attr("refY", markerBoxHeight / 2)
-      .attr("markerWidth", markerBoxWidth)
-      .attr("markerHeight", markerBoxHeight)
-      .attr("orient", "auto-start-reverse")
-      .append("path")
+    // Definitions for markers (arrow heads)
+    d3.select('.list')
+      .append('defs')
+      .append('marker')
+      .attr('id', 'arrow')
+      .attr('refX', markerBoxWidth / 2)
+      .attr('refY', markerBoxHeight / 2)
+      .attr('markerWidth', markerBoxWidth)
+      .attr('markerHeight', markerBoxHeight)
+      .attr('orient', 'auto-start-reverse')
+      .append('path')
       .attr(
-        "d",
+        'd',
+        // triangle
         d3.line()([
           [0, 0],
           [0, markerBoxHeight],
           [markerBoxWidth, markerBoxHeight / 2],
         ])
       )
-      .attr("stroke", "black");
+      .attr('stroke', 'black');
 
+    // Add <g> elements for each node
     const nodeGroup = d3
-      .select(".list")
-      .selectAll(".node")
+      .select('.list')
+      .selectAll('.node')
       .data(list)
       .enter()
-      .append("g")
-      .attr("class", "node");
+      .append('g')
+      .attr('class', 'node');
 
+    // Add circle to each node
     nodeGroup
-      .append("circle")
-      .attr("stroke", "black")
-      .attr("fill", "white")
-      .attr("stroke-width", nodeRadius / 10)
-      .attr("cx", (d, i) => i * spaceBetweenNodes + margin.left + nodeRadius)
-      .attr("cy", canvasHeight / 2)
-      .attr("r", nodeRadius);
+      .append('circle')
+      .attr('stroke', 'black')
+      .attr('fill', 'white')
+      .attr('stroke-width', nodeRadius / 10)
+      .attr('cx', (d, i) => i * spaceBetweenNodes + margin.left + nodeRadius)
+      .attr('cy', canvasHeight / 2)
+      .attr('r', nodeRadius);
 
+    // Add text label to each node
     nodeGroup
-      .append("text")
+      .append('text')
       .attr(
-        "x",
+        'x',
         (d, i) =>
           i * spaceBetweenNodes +
           margin.left +
           (nodeRadius * (4 - (d.value.toString().length % 4))) / 4
       )
-      .attr("y", canvasHeight / 2 + nodeRadius * 0.125)
+      .attr('y', canvasHeight / 2 + nodeRadius * 0.125)
       .attr(
-        "font-size",
+        'font-size',
         (d, i) =>
           (nodeRadius * 0.75) / (Math.floor(d.value.toString().length / 4) + 1)
       )
       .text((d, i) => d.value);
 
+    // Add arrow from node to next node
     nodeGroup
-      .append("path")
-      .attr("d", (d, i) => {
+      .append('path')
+      .attr('d', (d, i) => {
         if (d.nextKey === -1)
           return `M ${
             i * spaceBetweenNodes + nodeRadius + margin.left + nodeRadius
@@ -152,13 +169,13 @@ const LinkedList = (props: {
           nodeRadius
         }, ${canvasHeight / 2} ${
           Math.abs(nextIndex - i) > 1
-            ? "L" +
+            ? 'L' +
               (((i + nextIndex) / 2) * spaceBetweenNodes -
                 markerBoxWidth / 4 +
                 margin.left) +
-              ", " +
+              ', ' +
               canvasHeight / 4
-            : ""
+            : ''
         } L ${
           nextIndex * spaceBetweenNodes +
           nodeRadius * (nextIndex > i ? 0 : 2) -
@@ -166,13 +183,13 @@ const LinkedList = (props: {
           margin.left
         }, ${canvasHeight / 2}`;
       })
-      .attr("marker-end", "url(#arrow)")
-      .attr("fill", "none")
-      .attr("stroke", "black");
+      .attr('marker-end', 'url(#arrow)')
+      .attr('fill', 'none')
+      .attr('stroke', 'black');
   };
 
   const runStep = async () => {
-    const state = steps[curStepIndex];
+    const state = states[curStepIndex];
     if (state.message) setMessage(state.message);
     const newTransition = d3
       .transition()
@@ -180,34 +197,37 @@ const LinkedList = (props: {
       .ease(d3.easeLinear);
 
     const nodeGroup = d3
-      .select(".list")
-      .selectAll(".node")
+      .select('.list')
+      .selectAll('.node')
       .transition(newTransition);
 
     nodeGroup
-      .select("circle")
-      .attr("cx", (d, i: number) => {
-        for (let j = 0; j < state.list.length; j++) {
-          if (state.list[j].key === i) {
+      .select('circle')
+      // Move nodes horizontally if they have changed order
+      .attr('cx', (d, i: number) => {
+        for (let j = 0; j < state.nodes.length; j++) {
+          if (state.nodes[j].key === i) {
             return j * spaceBetweenNodes + margin.left + nodeRadius;
           }
         }
         return 0;
       })
-      .style("fill", (datum, i: number) => {
+      // Update node colors
+      .style('fill', (datum, i: number) => {
         const d = datum as ListNode;
-        for (let newIndex = 0; newIndex < state.list.length; newIndex++) {
-          if (state.list[newIndex].key === i) {
-            return state.colors ? state.colors[newIndex] : NodeColors.DEFAULT;
+        for (let newIndex = 0; newIndex < state.nodes.length; newIndex++) {
+          if (state.nodes[newIndex].key === i) {
+            return state.nodes[newIndex].color ?? NodeColors.DEFAULT;
           }
         }
         return NodeColors.DEFAULT;
       });
 
-    nodeGroup.select("text").attr("x", (datum, i: number) => {
+    // Update node texts
+    nodeGroup.select('text').attr('x', (datum, i: number) => {
       const d = datum as ListNode;
-      for (let j = 0; j < state.list.length; j++) {
-        if (state.list[j].key === i) {
+      for (let j = 0; j < state.nodes.length; j++) {
+        if (state.nodes[j].key === i) {
           return (
             j * spaceBetweenNodes +
             margin.left +
@@ -218,23 +238,24 @@ const LinkedList = (props: {
       return 0;
     });
 
-    nodeGroup.select("path").attr("d", (datum, i: number) => {
+    // Update node arrows to point to following node
+    nodeGroup.select('path').attr('d', (datum, i: number) => {
       const d = datum as ListNode;
       let index = -1,
         nextIndex = -1;
 
-      for (let j = 0; j < state.list.length; j++) {
-        if (state.list[j].key === d.key) {
+      for (let j = 0; j < state.nodes.length; j++) {
+        if (state.nodes[j].key === d.key) {
           index = j;
         }
       }
-      if (!state.list[index]) return "";
-      if (state.list[index].nextKey === -1)
+      if (!state.nodes[index]) return '';
+      if (state.nodes[index].nextKey === -1)
         return `M ${
           index * spaceBetweenNodes + nodeRadius + margin.left + nodeRadius
         } ${canvasHeight / 2}`;
-      for (let j = 0; j < state.list.length; j++) {
-        if (state.list[j].key === state.list[index].nextKey) {
+      for (let j = 0; j < state.nodes.length; j++) {
+        if (state.nodes[j].key === state.nodes[index].nextKey) {
           nextIndex = j;
         }
       }
@@ -245,13 +266,13 @@ const LinkedList = (props: {
         nodeRadius
       }, ${canvasHeight / 2} ${
         Math.abs(nextIndex - index) > 1
-          ? "L" +
+          ? 'L' +
             (((index + nextIndex) / 2) * spaceBetweenNodes -
               markerBoxWidth / 4 +
               margin.left) +
-            ", " +
+            ', ' +
             canvasHeight / 4
-          : ""
+          : ''
       } L ${
         nextIndex * spaceBetweenNodes +
         nodeRadius * (nextIndex > index ? 0 : 2) -
@@ -261,16 +282,19 @@ const LinkedList = (props: {
     });
     await newTransition.end();
     curStepIndex++;
-    if (curStepIndex >= steps.length) {
-      steps = [];
+    if (curStepIndex >= states.length) {
+      states = [];
       setBegun(false);
       if (props.cleanup)
         setList(
-          state.list.map((element, index, array) => ({
-            ...element,
-            key: index,
-            nextKey: index === array.length - 1 ? -1 : index + 1,
-          }))
+          state.nodes.map(
+            (element, index, array) =>
+              new ListNode(
+                index,
+                element.value,
+                index === array.length - 1 ? -1 : index + 1
+              )
+          )
         );
       return;
     }
@@ -294,7 +318,7 @@ const LinkedList = (props: {
               className='m-3'
               onClick={() => setBegun((prevBegun) => !prevBegun)}
             >
-              {begun ? "Pause" : "Start"}
+              {begun ? 'Pause' : 'Start'}
             </Button>
           </Col>
           <Col xs={12} md={4}>
@@ -307,9 +331,9 @@ const LinkedList = (props: {
               setCustomInput={(input) => {
                 try {
                   const providedExtraParams = input
-                    .split("]")[1]
+                    .split(']')[1]
                     .trim()
-                    .split(",");
+                    .split(',');
                   if (
                     providedExtraParams.length !== props.numExtraParams ||
                     providedExtraParams.some(
@@ -319,7 +343,7 @@ const LinkedList = (props: {
                     return setInvalidInput(true);
                   }
                   setList(
-                    eval(input.split("]")[0] + "]").map(
+                    eval(input.split(']')[0] + ']').map(
                       (num: number, index: number, array: number[]) => ({
                         key: index,
                         value: num,
@@ -327,7 +351,7 @@ const LinkedList = (props: {
                           index === array.length - 1
                             ? props.canCycle
                               ? Math.min(
-                                  eval(input.split("]")[1].trim()),
+                                  eval(input.split(']')[1].trim()),
                                   array.length - 1
                                 )
                               : -1
@@ -357,10 +381,10 @@ const LinkedList = (props: {
       <b>{message}</b>
       <svg
         style={{
-          height: "100%",
-          width: "100%",
-          marginRight: "0px",
-          marginLeft: "0px",
+          height: '100%',
+          width: '100%',
+          marginRight: '0px',
+          marginLeft: '0px',
         }}
       >
         <g className='list' />
@@ -370,4 +394,3 @@ const LinkedList = (props: {
 };
 
 export default LinkedList;
-
